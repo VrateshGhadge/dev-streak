@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Platform {
+  X
+  LINKEDIN
+  PEERLIST
+}
+
+enum Status {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  FAILED
+}
+
+model User {
+  id              String      @id @default(uuid())
+  username        String      @unique
+  email           String      @unique
+  password_hash   String 
+  name            String?
+  streak_no       Int         @default(0)
+
+  createdAt       DateTime    @default(now())
+  
+  dailylogs        DailyLog[] // a user can have multiple daily logs
+}
+
+model DailyLog {
+  id            String     @id @default(uuid())
+  user_id       String
+
+  content       String     @db.Text //their raw markdown file
+  proof_url     String?     //optional github/preview link
+
+  log_date      DateTime   @db.Date  //stores date in YYYY-MM-DD format
+  created_At    DateTime   @default(now())
+
+  user          User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  social_post SocialPost[]  //one log can generate multiple social post
+}
+
+model SocialPost {
+  id            String    @id @default(uuid())
+  daily_log_id   String
+
+  platform      Platform
+  status        Status    @default(DRAFT) //status defaults to draft
+
+  content       String
+
+  scheduled_for DateTime?  //optional because draft dont have a time yet
+  created_At    DateTime
+
+  daily_log     DailyLog   @relation(fields: [daily_log_id], references: [id], onDelete: Cascade) 
+}

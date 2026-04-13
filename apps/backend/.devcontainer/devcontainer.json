@@ -1,0 +1,13 @@
+{
+  "name": "Cloudflare Workers Environment",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20-bookworm",
+  "forwardPorts": [8787],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  }
+}
