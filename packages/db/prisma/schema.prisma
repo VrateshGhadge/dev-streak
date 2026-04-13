@@ -51,6 +51,9 @@ model DailyLog {
   user          User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   social_post SocialPost[]  //one log can generate multiple social post
+
+  // fast user + date lookup
+  @@index([user_id, log_date])  // index- speeds up fetching logs for a user by date (used for grid view)
 }
 
 model SocialPost {
@@ -62,8 +65,11 @@ model SocialPost {
 
   content       String
 
-  scheduled_for DateTime?  //optional because draft dont have a time yet
+  scheduled_for DateTime?  //nullable because a draft might not be scheduled yet
   created_At    DateTime
 
   daily_log     DailyLog   @relation(fields: [daily_log_id], references: [id], onDelete: Cascade) 
+
+  // fast scheduled post lookup
+  @@index([status, scheduled_for])  // index- speeds up finding scheduled posts that are ready to publish (cron job)
 }
