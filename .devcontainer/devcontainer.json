@@ -1,0 +1,23 @@
+{
+  "name": "DevStreak Monorepo",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+  "forwardPorts": [8787],
+  "portsAttributes": {
+    "8787": {
+      "label": "Cloudflare Worker",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      },
+      "extensions": [
+        "Prisma.prisma",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "postCreateCommand": "npm install"
+}

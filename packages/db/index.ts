@@ -1,4 +1,6 @@
-export * from './generated/prisma/client'
-export * from './generated/prisma/models'
-export * from './generated/prisma/enums'
+import { PrismaClient } from '@prisma/client/edge'
+import { withAccelerate } from '@prisma/extension-accelerate'
 
+export const createPrisma = (databaseUrl: string) => {
+	return new PrismaClient({ accelerateUrl: databaseUrl }).$extends(withAccelerate())
+}

@@ -1,27 +1,21 @@
-/*
-  Warnings:
-
-  - The primary key for the `User` table will be changed. If it partially fails, the table could be left without primary key constraint.
-  - A unique constraint covering the columns `[username]` on the table `User` will be added. If there are existing duplicate values, this will fail.
-  - Added the required column `password_hash` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Made the column `username` on table `User` required. This step will fail if there are existing NULL values in that column.
-
-*/
 -- CreateEnum
 CREATE TYPE "Platform" AS ENUM ('X', 'LINKEDIN', 'PEERLIST');
 
 -- CreateEnum
 CREATE TYPE "Status" AS ENUM ('DRAFT', 'SCHEDULED', 'PUBLISHED', 'FAILED');
 
--- AlterTable
-ALTER TABLE "User" DROP CONSTRAINT "User_pkey",
-ADD COLUMN     "password_hash" TEXT NOT NULL,
-ADD COLUMN     "streak_no" INTEGER NOT NULL DEFAULT 0,
-ALTER COLUMN "id" DROP DEFAULT,
-ALTER COLUMN "id" SET DATA TYPE TEXT,
-ALTER COLUMN "username" SET NOT NULL,
-ADD CONSTRAINT "User_pkey" PRIMARY KEY ("id");
-DROP SEQUENCE "User_id_seq";
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "username" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password_hash" TEXT NOT NULL,
+    "name" TEXT,
+    "streak_no" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "DailyLog" (
@@ -50,6 +44,15 @@ CREATE TABLE "SocialPost" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE INDEX "DailyLog_user_id_log_date_idx" ON "DailyLog"("user_id", "log_date");
+
+-- CreateIndex
+CREATE INDEX "SocialPost_status_scheduled_for_idx" ON "SocialPost"("status", "scheduled_for");
 
 -- AddForeignKey
 ALTER TABLE "DailyLog" ADD CONSTRAINT "DailyLog_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

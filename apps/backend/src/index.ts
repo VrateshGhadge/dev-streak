@@ -1,27 +1,25 @@
 import { Hono } from 'hono'
-import { PrismaClient } from 'db'
-import { PrismaNeon } from '@prisma/adapter-neon'
+import { createPrisma } from '@repo/db'
 
-const app = new Hono<{
-  Bindings: {
-    DATABASE_URL: string
-  }
-}>()
+type CloudflareBindings = {
+  DATABASE_URL: string
+}
 
-app.get('/health', async (c) => {
-  // Pass the Cloudflare env URL inside the configuration object
-  const adapter = new PrismaNeon({ connectionString: c.env.DATABASE_URL })
+const app = new Hono<{ Bindings: CloudflareBindings }>()
 
-  // Instantiate the Prisma Client with the edge adapter.
-  const prisma = new PrismaClient({ adapter })
+app.get('/health', (c) => {
+  return c.json({
+    status: 'ok'
+  })
+})
+
+app.get('/health/db', async (c) => {
+  const prisma = createPrisma(c.env.DATABASE_URL)
 
   try {
-    return c.json({ 
-      status: 'ok', 
-      message: 'Prisma 7 Edge database connection healthy'
-    })
+    await prisma.$queryRaw`SELECT 1`
+    return c.json({ status: 'ok', db: 'reachable' })
   } finally {
-    // Always disconnect in standalone scripts/edge environments
     await prisma.$disconnect()
   }
 })

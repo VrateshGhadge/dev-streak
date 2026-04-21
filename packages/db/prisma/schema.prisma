@@ -1,15 +1,47 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "./../generated/prisma-client"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id            String     @id @default(uuid())
+  username      String     @unique
+  email         String     @unique
+  password_hash String
+  name          String?
+  streak_no     Int        @default(0)
+  createdAt     DateTime   @default(now())
+  dailylogs     DailyLog[]
+}
+
+model DailyLog {
+  id          String       @id @default(uuid())
+  user_id     String
+  content     String
+  proof_url   String?
+  log_date    DateTime     @db.Date
+  created_At  DateTime     @default(now())
+  user        User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  social_post SocialPost[]
+
+  @@index([user_id, log_date])
+}
+
+model SocialPost {
+  id            String    @id @default(uuid())
+  daily_log_id  String
+  platform      Platform
+  status        Status    @default(DRAFT)
+  content       String
+  scheduled_for DateTime?
+  created_At    DateTime
+  daily_log     DailyLog  @relation(fields: [daily_log_id], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduled_for])
 }
 
 enum Platform {
@@ -23,53 +55,4 @@ enum Status {
   SCHEDULED
   PUBLISHED
   FAILED
-}
-
-model User {
-  id              String      @id @default(uuid())
-  username        String      @unique
-  email           String      @unique
-  password_hash   String 
-  name            String?
-  streak_no       Int         @default(0)
-
-  createdAt       DateTime    @default(now())
-  
-  dailylogs        DailyLog[] // a user can have multiple daily logs
-}
-
-model DailyLog {
-  id            String     @id @default(uuid())
-  user_id       String
-
-  content       String     @db.Text //their raw markdown file
-  proof_url     String?     //optional github/preview link
-
-  log_date      DateTime   @db.Date  //stores date in YYYY-MM-DD format
-  created_At    DateTime   @default(now())
-
-  user          User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  social_post SocialPost[]  //one log can generate multiple social post
-
-  // fast user + date lookup
-  @@index([user_id, log_date])  // index- speeds up fetching logs for a user by date (used for grid view)
-}
-
-model SocialPost {
-  id            String    @id @default(uuid())
-  daily_log_id   String
-
-  platform      Platform
-  status        Status    @default(DRAFT) //status defaults to draft
-
-  content       String
-
-  scheduled_for DateTime?  //nullable because a draft might not be scheduled yet
-  created_At    DateTime
-
-  daily_log     DailyLog   @relation(fields: [daily_log_id], references: [id], onDelete: Cascade) 
-
-  // fast scheduled post lookup
-  @@index([status, scheduled_for])  // index- speeds up finding scheduled posts that are ready to publish (cron job)
 }
